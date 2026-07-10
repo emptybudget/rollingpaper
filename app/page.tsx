@@ -40,6 +40,10 @@ export default function HomePage() {
           </Link>
         ))}
       </div>
+
+      <footer className="footer">
+        <Link href="/admin">관리자</Link>
+      </footer>
     </main>
   );
 }

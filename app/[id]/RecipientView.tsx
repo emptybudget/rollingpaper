@@ -308,29 +308,86 @@ function WriterFlow({
 /* ================================================================== */
 
 function ReceivedFeed({ recipientId }: { recipientId: number }) {
-  const [messages, setMessages] = useState<PublicMessage[] | null>(null);
+  const pwStorageKey = `rp_pw_${recipientId}`;
+  const [step, setStep] = useState<"auth" | "view">("auth");
+  const [password, setPassword] = useState("");
+  const [messages, setMessages] = useState<PublicMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`/api/message/${recipientId}`, {
-          cache: "no-store",
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error ?? "불러오지 못했어요.");
-          return;
-        }
-        setMessages(data.messages ?? []);
-      } catch {
-        setError("네트워크 오류가 발생했어요.");
+  async function open(pw: string) {
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/inbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ personId: recipientId, password: pw }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "불러오지 못했어요.");
+        window.localStorage.removeItem(pwStorageKey);
+        return;
       }
-    })();
-  }, [recipientId]);
+      setMessages(data.messages ?? []);
+      window.localStorage.setItem(pwStorageKey, pw);
+      setStep("view");
+    } catch {
+      setError("네트워크 오류가 발생했어요.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  if (error) return <div className="alert alert-error">{error}</div>;
-  if (messages === null) return <p className="empty">불러오는 중...</p>;
+  // 작성 때 같은 기기에서 쓴 비밀번호가 있으면 자동으로 열어준다.
+  useEffect(() => {
+    const saved =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem(pwStorageKey)
+        : null;
+    if (saved) {
+      setPassword(saved);
+      void open(saved);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (step === "auth") {
+    return (
+      <div className="card">
+        <div className="field">
+          <label>내 비밀번호 (숫자 4자리)</label>
+          <p className="hint">
+            작성할 때 정한 비밀번호를 입력하면 나에게 온 메시지를 볼 수 있어요.
+          </p>
+          <input
+            value={password}
+            onChange={(e) =>
+              setPassword(e.target.value.replace(/\D/g, "").slice(0, 4))
+            }
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && /^\d{4}$/.test(password))
+                void open(password);
+            }}
+            inputMode="numeric"
+            placeholder="예) 1234"
+            maxLength={4}
+            autoFocus
+          />
+        </div>
+        {error && <div className="alert alert-error">{error}</div>}
+        <button
+          className="btn"
+          disabled={loading || !/^\d{4}$/.test(password)}
+          onClick={() => void open(password)}
+        >
+          {loading ? "확인 중..." : "내 메시지 보기 💌"}
+        </button>
+      </div>
+    );
+  }
+
   if (messages.length === 0)
     return <p className="empty">아직 도착한 메시지가 없어요 🥲</p>;
 

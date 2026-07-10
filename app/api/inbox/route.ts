@@ -1,27 +1,31 @@
 import { NextResponse } from "next/server";
-import { checkPassword, getWriterDrafts } from "@/lib/redis";
+import { checkPassword, getReceived } from "@/lib/redis";
 import { getMember } from "@/constants/members";
+import { isReleased } from "@/utils/date";
 
 export const dynamic = "force-dynamic";
 
-// POST /api/writer  { writerId, password }
-// 작성자 "로그인/이어쓰기" 진입점.
-// - 비밀번호가 처음이면 그 값으로 등록되고
-// - 이미 등록돼 있으면 일치해야 통과한다.
-// 통과하면 이 작성자가 지금까지 써 둔 초안(수신자별 내용)을 함께 반환한다.
+// POST /api/inbox  { personId, password }
+// 공개 후, 본인 비밀번호를 확인한 뒤 자기에게 도착한 메시지를 반환한다.
 export async function POST(req: Request) {
-  let body: { writerId?: number; password?: string };
+  if (!isReleased()) {
+    return NextResponse.json(
+      { error: "아직 공개 전이에요." },
+      { status: 403 }
+    );
+  }
+
+  let body: { personId?: number; password?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "잘못된 요청이에요." }, { status: 400 });
   }
 
-  const writerId = Number(body.writerId);
+  const personId = Number(body.personId);
   const password = String(body.password ?? "").trim();
 
-  const member = getMember(writerId);
-  if (!member) {
+  if (!getMember(personId)) {
     return NextResponse.json({ error: "존재하지 않는 이름이에요." }, { status: 404 });
   }
   if (!/^\d{4}$/.test(password)) {
@@ -31,13 +35,13 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!(await checkPassword(writerId, password))) {
+  if (!(await checkPassword(personId, password))) {
     return NextResponse.json(
       { error: "비밀번호가 일치하지 않아요." },
       { status: 403 }
     );
   }
 
-  const drafts = await getWriterDrafts(writerId);
-  return NextResponse.json({ ok: true, name: member.name, drafts });
+  const messages = await getReceived(personId);
+  return NextResponse.json({ ok: true, messages });
 }

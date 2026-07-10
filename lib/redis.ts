@@ -26,6 +26,20 @@ export interface PublicMessage {
   updatedAt: number;
 }
 
+// 비밀번호 확인: 아직 없으면 이 값으로 등록하고 통과, 있으면 일치해야 통과.
+// 작성(이어쓰기)과 공개 후 열람에서 공통으로 쓴다.
+export async function checkPassword(
+  personId: number,
+  password: string
+): Promise<boolean> {
+  const existing = await redis.get<string | number>(pwKey(personId));
+  if (existing == null) {
+    await redis.set(pwKey(personId), password);
+    return true;
+  }
+  return String(existing) === password;
+}
+
 export function parseMessage(value: unknown): StoredMessage | null {
   if (value == null) return null;
   try {
@@ -58,4 +72,27 @@ export async function getWriterDrafts(
     }
   });
   return drafts;
+}
+
+// 한 사람에게 도착한 메시지 전체(공개 후 열람용).
+export async function getReceived(
+  recipientId: number
+): Promise<PublicMessage[]> {
+  const raw = await redis.hgetall<Record<string, unknown>>(
+    rollingKey(recipientId)
+  );
+  const entries = raw ? Object.entries(raw) : [];
+  return entries
+    .map(([, value]) => {
+      const p = parseMessage(value);
+      if (!p || p.content.trim() === "") return null;
+      return {
+        writerId: p.writerId,
+        writer: p.writer,
+        content: p.content,
+        updatedAt: p.updatedAt ?? 0,
+      } satisfies PublicMessage;
+    })
+    .filter((m): m is PublicMessage => m !== null)
+    .sort((a, b) => a.updatedAt - b.updatedAt);
 }

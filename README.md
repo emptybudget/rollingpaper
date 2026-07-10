@@ -17,7 +17,12 @@
    다시 들어오면 **이어서** 쓸 수 있다. 전체 명단에서 원하는 사람으로 바로 점프도 가능.
 
 ### 공개 후 (읽기 모드)
-- 메인에서 **내 이름**을 누르면, 그동안 나에게 도착한 모든 메시지가 피드로 공개된다.
+- 메인에서 **내 이름**을 누르고, **작성 때 정한 비밀번호**를 입력하면 나에게 온 메시지가 보인다.
+- **본인만 열람** 방식이라 남의 롤링페이퍼는 볼 수 없다.
+
+### 관리자 (`/admin`)
+- 메인 맨 아래 작은 "관리자" 링크로 진입. `ADMIN_PASSWORD` 로 보호된다.
+- **잘못 등록된 메시지 삭제**, **비밀번호 초기화**(이름을 잘못 선점당해 잠긴 경우 복구) 가능.
 
 공개 시각은 `utils/date.ts`의 `RELEASE_AT`(기본 `2026-07-13T09:00:00+09:00`)에서 관리하며,
 `NEXT_PUBLIC_RELEASE_AT` 환경변수로 덮어쓸 수 있다(테스트용).
@@ -34,7 +39,8 @@
 
 - `POST /api/writer` `{writerId, password}` → 비밀번호 확인/등록 후 내 초안 전체 반환(이어쓰기)
 - `POST /api/writer/message` `{writerId, recipientId, content, password}` → 한 명에게 쓴 내용 저장(빈 내용이면 삭제)
-- `GET /api/message/[id]` → (공개 후) 그 사람에게 도착한 메시지 전체
+- `POST /api/inbox` `{personId, password}` → (공개 후) 비밀번호 확인 후 나에게 온 메시지 전체
+- `POST /api/admin` `{adminPassword, action, ...}` → `list` / `deleteMessage` / `resetPassword`
 
 ## 로컬 실행
 
@@ -55,7 +61,7 @@ NEXT_PUBLIC_RELEASE_AT=2020-01-01T09:00:00+09:00   # 공개 후(읽기 모드)
 ## 배포 (Vercel)
 
 1. Upstash 콘솔에서 Redis DB 생성 → REST URL / TOKEN 복사
-2. Vercel 프로젝트 환경변수에 `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` 추가
+2. Vercel 프로젝트 환경변수에 `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `ADMIN_PASSWORD` 추가
 3. 배포 🚀
 
 ## 명단 수정

@@ -363,3 +363,17 @@ textarea {
   text-align: left;
   color: var(--text);
 }
+
+/* ---------- 관리자 링크 ---------- */
+.footer {
+  text-align: center;
+  margin-top: 48px;
+}
+.footer a {
+  color: #cfc4bc;
+  text-decoration: none;
+  font-size: 13px;
+}
+.footer a:hover {
+  color: var(--muted);
+}

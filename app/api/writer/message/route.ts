@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { redis, rollingKey, pwKey, StoredMessage } from "@/lib/redis";
+import { redis, rollingKey, checkPassword, StoredMessage } from "@/lib/redis";
 import { getMember } from "@/constants/members";
 import { isReleased } from "@/utils/date";
 
@@ -55,11 +55,7 @@ export async function POST(req: Request) {
     );
   }
 
-  // 비밀번호 확인(없으면 이 값으로 등록)
-  const existing = await redis.get<string | number>(pwKey(writerId));
-  if (existing == null) {
-    await redis.set(pwKey(writerId), password);
-  } else if (String(existing) !== password) {
+  if (!(await checkPassword(writerId, password))) {
     return NextResponse.json(
       { error: "비밀번호가 일치하지 않아요." },
       { status: 403 }
