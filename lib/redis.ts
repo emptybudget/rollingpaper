@@ -1,6 +1,13 @@
 import { Redis } from "@upstash/redis";
 import { MEMBERS } from "@/constants/members";
 
+// Vercel 스토리지(마켓플레이스)로 붙이면 KV_REST_API_* 이름으로 들어오기도 해서,
+// 그 경우엔 Upstash 표준 이름으로 옮겨준 뒤 자동으로 읽는다.
+if (!process.env.UPSTASH_REDIS_REST_URL && process.env.KV_REST_API_URL) {
+  process.env.UPSTASH_REDIS_REST_URL = process.env.KV_REST_API_URL;
+  process.env.UPSTASH_REDIS_REST_TOKEN = process.env.KV_REST_API_TOKEN;
+}
+
 // 환경변수 UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN 을 자동으로 읽는다.
 export const redis = Redis.fromEnv();
 
