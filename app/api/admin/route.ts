@@ -7,13 +7,8 @@ export const dynamic = "force-dynamic";
 // POST /api/admin  { adminPassword, action, ... }
 // action: "list" | "deleteMessage" | "resetPassword"
 export async function POST(req: Request) {
-  const admin = process.env.ADMIN_PASSWORD;
-  if (!admin) {
-    return NextResponse.json(
-      { error: "관리자 비밀번호(ADMIN_PASSWORD)가 설정되지 않았어요." },
-      { status: 500 }
-    );
-  }
+  // 기본값 0710. Vercel 등에서 ADMIN_PASSWORD 를 설정하면 그 값으로 바뀐다.
+  const admin = process.env.ADMIN_PASSWORD || "0710";
 
   let body: {
     adminPassword?: string;
