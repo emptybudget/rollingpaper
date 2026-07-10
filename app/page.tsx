@@ -22,13 +22,15 @@ export default function HomePage() {
     <main>
       <header className="hero">
         <h1>💌 우리들의 롤링페이퍼</h1>
-        <p>이름을 눌러 마음을 전해 주세요</p>
+        <p>{released ? "내 이름을 눌러 확인해 보세요" : "내 이름을 골라주세요"}</p>
       </header>
 
       <div className="banner">
         {released
-          ? "🎉 모든 메시지가 공개되었어요! 이름을 눌러 확인해 보세요."
-          : `🔒 ${formatRelease(releaseDate())}에 다 함께 공개돼요`}
+          ? "🎉 공개됐어요! 내 이름을 누르면 나에게 온 메시지를 볼 수 있어요."
+          : `내 이름을 고르면 다른 분들께 편지를 남길 수 있어요. ${formatRelease(
+              releaseDate()
+            )}에 다 함께 공개돼요 🔒`}
       </div>
 
       <div className="grid">

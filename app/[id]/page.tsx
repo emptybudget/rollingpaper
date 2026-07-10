@@ -15,6 +15,8 @@ export default function RecipientPage({
   const member = getMember(id);
   if (!member) notFound();
 
+  const released = isReleased();
+
   return (
     <main>
       <Link href="/" className="back">
@@ -23,13 +25,17 @@ export default function RecipientPage({
       <header className="hero" style={{ paddingTop: 8 }}>
         <h1>{member.name}</h1>
         <p>
-          {isReleased()
-            ? "도착한 메시지를 확인해 보세요"
-            : `${member.name}님에게 마음을 전해 주세요`}
+          {released
+            ? `${member.name}님에게 도착한 메시지예요`
+            : "다른 분들께 한 명씩 마음을 남겨보세요"}
         </p>
       </header>
 
-      <RecipientView recipientId={member.id} recipientName={member.name} />
+      <RecipientView
+        recipientId={member.id}
+        recipientName={member.name}
+        released={released}
+      />
     </main>
   );
 }

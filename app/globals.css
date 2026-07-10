@@ -321,3 +321,45 @@ textarea {
   color: var(--primary-dark);
   background: #fff3ec;
 }
+
+/* ---------- 작성 마법사(wizard) ---------- */
+.wizard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 15px;
+}
+.save-status {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 18px;
+}
+.progress {
+  margin-top: 10px;
+  height: 8px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+.nav-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.nav-row .btn {
+  flex: 1;
+}
+/* jump 목록의 체크칩은 버튼이므로 기본 버튼 스타일 초기화 */
+.select-list button.chk {
+  font-family: inherit;
+  text-align: left;
+  color: var(--text);
+}
