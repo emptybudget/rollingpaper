@@ -72,6 +72,43 @@ export default function AdminPage() {
     }
   }
 
+  function downloadTxt() {
+    if (!people) return;
+    const now = new Date();
+    const stamp = now.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+
+    const lines: string[] = ["💌 우리들의 롤링페이퍼", `저장: ${stamp}`, ""];
+    for (const p of people) {
+      lines.push("========================================");
+      lines.push(`${p.name} (받은 메시지 ${p.messages.length}개)`);
+      lines.push("========================================");
+      lines.push("");
+      if (p.messages.length === 0) {
+        lines.push("(받은 메시지 없음)");
+      } else {
+        p.messages.forEach((m, i) => {
+          lines.push(`[${i + 1}] From. ${m.writer}`);
+          lines.push(m.content);
+          lines.push("");
+        });
+      }
+      lines.push("");
+    }
+
+    // 앞의 ﻿(BOM)는 윈도우 메모장에서 한글이 깨지지 않게 해준다.
+    const blob = new Blob(["﻿" + lines.join("\n")], {
+      type: "text/plain;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `rollingpaper_${now.toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <main>
       <Link href="/" className="back">
@@ -109,6 +146,15 @@ export default function AdminPage() {
       ) : (
         <>
           {error && <div className="alert alert-error">{error}</div>}
+          <div className="card">
+            <button className="btn" onClick={downloadTxt}>
+              ⬇️ 전체 롤링페이퍼 TXT 저장
+            </button>
+            <p className="hint" style={{ marginTop: 10 }}>
+              모든 사람의 메시지를 텍스트 파일 하나로 저장해요. 사이트를 없애기
+              전에 백업해 두세요.
+            </p>
+          </div>
           {people.map((p) => (
             <div className="card" key={p.id} style={{ marginTop: 14 }}>
               <div className="wizard-head">
