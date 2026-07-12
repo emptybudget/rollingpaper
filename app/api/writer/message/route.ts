@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { redis, rollingKey, checkPassword, StoredMessage } from "@/lib/redis";
 import { getMember } from "@/constants/members";
-import { isReleased } from "@/utils/date";
+import { isWritingOpen } from "@/utils/date";
 
 export const dynamic = "force-dynamic";
 
 // POST /api/writer/message  { writerId, recipientId, content, password }
 // 한 명에게 쓴 내용을 저장(자동 중간 저장). 내용이 비면 해당 메시지를 지운다.
 export async function POST(req: Request) {
-  if (isReleased()) {
+  if (!isWritingOpen()) {
     return NextResponse.json(
-      { error: "공개가 시작되어 더 이상 작성할 수 없어요." },
+      { error: "작성 기간이 끝났어요. (월요일 자정 마감)" },
       { status: 403 }
     );
   }

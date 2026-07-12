@@ -1,7 +1,7 @@
 # 💌 우리들의 롤링페이퍼
 
 로그인 없이 **내 이름을 골라** 나머지 분들께 한 명씩 편지를 남기고,
-**월요일 오전 9시(KST)** 에 내 이름을 누르면 나에게 온 메시지를 다 함께 확인하는 웹앱.
+**월요일 자정까지 작성 → 화요일 오전 9시(KST) 공개**, 내 이름을 누르면 나에게 온 메시지를 확인하는 웹앱.
 
 - **Framework**: Next.js 14 (App Router)
 - **DB**: Upstash Redis (`@upstash/redis`)
@@ -25,8 +25,12 @@
 - **모든 사람의 받은 메시지를 전부 열람**(공개 전에도 가능 → 테스트/검수용).
 - **잘못 등록된 메시지 삭제**, **비밀번호 초기화**(이름을 잘못 선점당해 잠긴 경우 복구) 가능.
 
-공개 시각은 `utils/date.ts`의 `RELEASE_AT`(기본 `2026-07-13T09:00:00+09:00`)에서 관리하며,
-`NEXT_PUBLIC_RELEASE_AT` 환경변수로 덮어쓸 수 있다(테스트용).
+### 진행 단계 (`utils/date.ts`)
+- **작성 중**: `now < WRITE_CLOSE_AT`(기본 `2026-07-14T00:00:00+09:00`, 월 자정) — 작성 가능
+- **마감(공개 대기)**: `WRITE_CLOSE_AT ≤ now < RELEASE_AT` — 작성 불가, "화요일 9시 공개 예정" 안내
+- **공개**: `now ≥ RELEASE_AT`(기본 `2026-07-14T09:00:00+09:00`, 화 오전 9시) — 본인 열람
+
+두 시각 모두 `NEXT_PUBLIC_WRITE_CLOSE_AT`, `NEXT_PUBLIC_RELEASE_AT` 환경변수로 덮어쓸 수 있다(테스트용).
 
 ## 데이터 구조 (Redis)
 
@@ -51,12 +55,21 @@ cp .env.example .env.local   # UPSTASH_REDIS_REST_URL / TOKEN 채우기
 npm run dev
 ```
 
-### 공개 전/후 화면 테스트
-`.env.local`에 `NEXT_PUBLIC_RELEASE_AT`을 넣어 시간을 조작한다(변경 후 dev 재시작).
+### 단계별 화면 테스트
+`.env.local`에 시각을 넣어 조작한다(변경 후 dev 재시작).
 
 ```bash
-NEXT_PUBLIC_RELEASE_AT=2030-01-01T09:00:00+09:00   # 공개 전(작성 모드)
-NEXT_PUBLIC_RELEASE_AT=2020-01-01T09:00:00+09:00   # 공개 후(읽기 모드)
+# 작성 모드: 두 시각 모두 미래
+NEXT_PUBLIC_WRITE_CLOSE_AT=2030-01-01T00:00:00+09:00
+NEXT_PUBLIC_RELEASE_AT=2030-01-01T09:00:00+09:00
+
+# 마감(공개 대기) 모드: 마감은 지났고 공개는 미래
+NEXT_PUBLIC_WRITE_CLOSE_AT=2020-01-01T00:00:00+09:00
+NEXT_PUBLIC_RELEASE_AT=2030-01-01T09:00:00+09:00
+
+# 공개(읽기) 모드: 두 시각 모두 과거
+NEXT_PUBLIC_WRITE_CLOSE_AT=2020-01-01T00:00:00+09:00
+NEXT_PUBLIC_RELEASE_AT=2020-01-01T09:00:00+09:00
 ```
 
 ## 배포 (Vercel)

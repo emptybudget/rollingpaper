@@ -11,19 +11,40 @@ interface PublicMessage {
   updatedAt: number;
 }
 
+type Phase = "writing" | "closed" | "released";
+
 export default function RecipientView({
   recipientId,
   recipientName,
-  released,
+  phase,
 }: {
   recipientId: number;
   recipientName: string;
-  released: boolean;
+  phase: Phase;
 }) {
-  if (released) {
+  if (phase === "released") {
     return <ReceivedFeed recipientId={recipientId} />;
   }
+  if (phase === "closed") {
+    return <WritingClosed />;
+  }
   return <WriterFlow writerId={recipientId} writerName={recipientName} />;
+}
+
+/* 작성 마감 ~ 공개 사이의 대기 화면 */
+function WritingClosed() {
+  return (
+    <div className="card count-box">
+      <div className="count-num">🔒</div>
+      <p style={{ margin: "8px 0 0", color: "var(--muted)" }}>
+        작성이 마감됐어요.
+        <br />
+        <b>화요일 오전 9시</b>에 공개돼요.
+        <br />
+        그때 이 이름을 눌러 비밀번호로 확인할 수 있어요.
+      </p>
+    </div>
+  );
 }
 
 /* ================================================================== */
